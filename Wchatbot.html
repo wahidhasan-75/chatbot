@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chatbot</title>
+    <style>
+        body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: url("https://images.unsplash.com/photo-1503264116251-35a269479413?ixlib=rb-4.0.3&auto=format&fit=crop&w=1500&q=80") 
+                    no-repeat center center fixed;
+        background-size: cover;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        }
+
+        .app-container {
+        width: 400px;
+        height: 600px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(15px);
+        border-radius: 20px;
+        box-shadow: 0px 10px 40px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        }
+
+        .chat-header {
+        background: rgba(25, 135, 84, 0.8);
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-messages-container {
+        flex-grow: 1;
+        padding: 15px;
+        overflow-y: auto;
+        scrollbar-width: none;
+        }
+
+        .chat-message-user,
+        .chat-message-robot {
+        display: flex;
+        align-items: flex-end;
+        margin-bottom: 12px;
+        }
+
+        .chat-message-user {
+        justify-content: flex-end;
+        }
+
+        .chat-message-robot {
+        justify-content: flex-start;
+        }
+
+        .chat-message-text {
+        padding: 12px 16px;
+        border-radius: 18px;
+        font-size: 15px;
+        max-width: 70%;
+        box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .chat-message-user .chat-message-text {
+        background: rgba(25, 135, 84, 0.9);
+        color: white;
+        border-bottom-right-radius: 5px;
+        }
+
+        .chat-message-robot .chat-message-text {
+        background: rgba(255, 255, 255, 0.8);
+        color: #333;
+        border-bottom-left-radius: 5px;
+        }
+
+        .chat-input-container {
+        display: flex;
+        padding: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-input {
+        flex-grow: 1;
+        padding: 12px 15px;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        font-size: 15px;
+        outline: none;
+        background: rgba(255, 255, 255, 0.4);
+        color: #000;
+        }
+
+        .send-button {
+        background-color: rgba(25, 135, 84, 0.9);
+        color: white;
+        padding: 12px 18px;
+        margin-left: 10px;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.2s;
+        }
+
+        .send-button:hover {
+        background-color: rgba(20, 110, 70, 0.9);
+
+
+            }
+    </style>
+  </head>
+  <body>
+    <div class="js-container"></div>
+
+    <script src="https://unpkg.com/supersimpledev/react.js"></script>
+    <script src="https://unpkg.com/supersimpledev/react-dom.js"></script>
+    <script src="https://unpkg.com/supersimpledev/babel.js"></script>
+
+    <script type="text/babel">
+      
+      function getCustomResponse(inputText) {
+        const text = inputText.toLowerCase().trim();
+
+        // greetings
+        if (/(hello|hi|hey)/.test(text)) {
+          return "Hello! How can I help you?";
+        }
+        // today's date
+        if (text.includes("date")) {
+          return "Today is " + new Date().toDateString();
+        }
+        // flip coin
+        if (text.includes("flip") && text.includes("coin")) {
+          return Math.random() > 0.5 ? "Heads" : "Tails";
+        }
+        // custom Q/A
+        if (text.includes("your name")) {
+          return "I am Chatbot 🤖";
+        }
+        if (/how are you|how r u/.test(text)) {
+          return "I am fine, thanks for asking!";
+        }
+        if (/how.*wahid/.test(text)) {
+          return "He is great!";
+        }
+        if (/who.*made you|who.*created you/.test(text)) {
+          return "My boss Wahid 👑 built me!";
+        }
+
+        return "Sorry, I don’t understand that yet.";
+      }
+
+      function ChatInput({ chatMessages, setChatMessages }) {
+        const [inputText, setInputText] = React.useState("");
+
+        function saveInputText(event) {
+          setInputText(event.target.value);
+        }
+
+        function sendMessage() {
+          if (!inputText.trim()) return;
+
+          const newChatMessages = [
+            ...chatMessages,
+            { message: inputText, sender: "user", id: crypto.randomUUID() },
+          ];
+          setChatMessages(newChatMessages);
+
+          const response = getCustomResponse(inputText);
+          setChatMessages([
+            ...newChatMessages,
+            { message: response, sender: "robot", id: crypto.randomUUID() },
+          ]);
+
+          setInputText("");
+        }
+
+        function handleKeyPress(e) {
+          if (e.key === "Enter") {
+            sendMessage();
+          }
+        }
+
+        return (
+          <div className="chat-input-container">
+            <input
+              placeholder="Type your message..."
+              onChange={saveInputText}
+              onKeyDown={handleKeyPress}
+              value={inputText}
+              className="chat-input"
+            />
+            <button onClick={sendMessage} className="send-button">➤</button>
+          </div>
+        );
+      }
+
+      function ChatMessage({ message, sender }) {
+        return (
+          <div
+            className={
+              sender === "user" ? "chat-message-user" : "chat-message-robot"
+            }
+          >
+            <div className="chat-message-text">{message}</div>
+          </div>
+        );
+      }
+
+      function ChatMessages({ chatMessages }) {
+        const chatMessagesRef = React.useRef(null);
+
+        React.useEffect(() => {
+          const containerElem = chatMessagesRef.current;
+          if (containerElem) {
+            containerElem.scrollTop = containerElem.scrollHeight;
+          }
+        }, [chatMessages]);
+
+        return (
+          <div className="chat-messages-container" ref={chatMessagesRef}>
+            {chatMessages.map((chatMessage) => {
+              return (
+                <ChatMessage
+                  message={chatMessage.message}
+                  sender={chatMessage.sender}
+                  key={chatMessage.id}
+                />
+              );
+            })}
+          </div>
+        );
+      }
+
+      function App() {
+        const [chatMessages, setChatMessages] = React.useState([
+          {
+            message: "Hello! I am Chatbot 🤖",
+            sender: "robot",
+            id: "id1",
+          },
+        ]);
+
+        return (
+          <div className="app-container">
+            <div className="chat-header">My Chatbot</div>
+            <ChatMessages chatMessages={chatMessages} />
+            <ChatInput
+              chatMessages={chatMessages}
+              setChatMessages={setChatMessages}
+            />
+          </div>
+        );
+      }
+
+      const container = document.querySelector(".js-container");
+      ReactDOM.createRoot(container).render(<App />);
+    </script>
+  </body>
+</html>
